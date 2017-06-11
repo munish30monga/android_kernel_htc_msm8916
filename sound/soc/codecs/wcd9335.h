@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -26,12 +26,10 @@
 #define TASHA_SB_PGD_PORT_TX_BASE   0x50
 
 #define TASHA_ZDET_SUPPORTED true
-/* z value defined in milliohm */
 #define TASHA_ZDET_VAL_32	32000
 #define TASHA_ZDET_VAL_400	400000
 #define TASHA_ZDET_VAL_1200	1200000
 #define TASHA_ZDET_VAL_100K	100000000
-/* z floating defined in ohms */
 #define TASHA_ZDET_FLOATING_IMPEDANCE 0x0FFFFFFE
 
 #define WCD9335_DMIC_CLK_DIV_2  0x0
@@ -46,7 +44,6 @@
 
 #define TASHA_I2S_MASTER_MODE_MASK 0x02
 
-/* Number of input and output Slimbus port */
 enum {
 	TASHA_RX0 = 0,
 	TASHA_RX1,
@@ -88,10 +85,6 @@ enum wcd9335_codec_event {
 	WCD9335_CODEC_EVENT_CODEC_UP = 0,
 };
 
-/* Dai data structure holds the
- * dai specific info like rate,
- * channel number etc.
- */
 struct tasha_codec_dai_data {
 	u32 rate;
 	u32 *ch_num;
@@ -99,30 +92,17 @@ struct tasha_codec_dai_data {
 	u32 ch_tot;
 };
 
-/* Structure used to update codec
- * register defaults after reset
- */
 struct tasha_reg_mask_val {
 	u16 reg;
 	u8 mask;
 	u8 val;
 };
 
-/* Selects compander and smart boost settings
- * for a given speaker mode
- */
 enum {
 	SPKR_MODE_DEFAULT,
-	SPKR_MODE_1,          /* COMP Gain = 12dB, Smartboost Max = 5.5V */
+	SPKR_MODE_1,          
 };
 
-/*
- * Rx path gain offsets
- */
-enum {
-	RX_GAIN_OFFSET_M1P5_DB,
-	RX_GAIN_OFFSET_0_DB,
-};
 
 extern void *tasha_get_afe_config(struct snd_soc_codec *codec,
 				  enum afe_config_type config_type);
@@ -148,5 +128,4 @@ extern int tasha_codec_enable_standalone_micbias(struct snd_soc_codec *codec,
 						int micb_num,
 						bool enable);
 extern int tasha_set_spkr_mode(struct snd_soc_codec *codec, int mode);
-extern int tasha_set_spkr_gain_offset(struct snd_soc_codec *codec, int offset);
 #endif

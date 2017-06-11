@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -48,10 +48,6 @@ static int msm_iommu_parse_bfb_settings(struct platform_device *pdev,
 	u32 nreg, nval;
 	int ret;
 
-	/*
-	 * It is not valid for a device to have the BFB_REG_NODE_NAME
-	 * property but not the BFB_DATA_NODE_NAME property, and vice versa.
-	 */
 	if (!of_get_property(pdev->dev.of_node, BFB_REG_NODE_NAME, &nreg)) {
 		if (of_get_property(pdev->dev.of_node, BFB_DATA_NODE_NAME,
 				    &nval))
@@ -103,7 +99,7 @@ static int __get_bus_vote_client(struct platform_device *pdev,
 	struct msm_bus_scale_pdata *bs_table;
 	const char *dummy;
 
-	/* Check whether bus scaling has been specified for this node */
+	
 	ret = of_property_read_string(pdev->dev.of_node, "qcom,msm-bus,name",
 				      &dummy);
 	if (ret)
@@ -127,11 +123,6 @@ static void __put_bus_vote_client(struct msm_iommu_drvdata *drvdata)
 	drvdata->bus_client = 0;
 }
 
-/*
- * CONFIG_IOMMU_NON_SECURE allows us to override the secure
- * designation of SMMUs in device tree. With this config enabled
- * all SMMUs will be programmed by this driver.
- */
 #ifdef CONFIG_IOMMU_NON_SECURE
 static inline void get_secure_id(struct device_node *node,
 			  struct msm_iommu_drvdata *drvdata)
@@ -531,17 +522,8 @@ static int msm_iommu_ctx_parse_dt(struct platform_device *pdev,
 
 	get_secure_ctx(pdev->dev.of_node, drvdata, ctx_drvdata);
 
-	if (drvdata->sec_id != -1) {
+	if (ctx_drvdata->secure_context) {
 		irq = platform_get_irq(pdev, 1);
-
-		/*
-		 * This is for supporting old DTs where it was assumed
-		 * that interrupt 0 is only required as their CB is
-		 * non-secure.
-		 */
-		if (irq < 0)
-			irq = platform_get_irq(pdev, 0);
-
 		if (irq > 0) {
 			ret = devm_request_threaded_irq(&pdev->dev, irq, NULL,
 					msm_iommu_secure_fault_handler_v2,
@@ -578,11 +560,6 @@ static int msm_iommu_ctx_parse_dt(struct platform_device *pdev,
 	if (ret)
 		goto out;
 
-	/* Calculate the context bank number using the base addresses.
-	 * Typically CB0 base address is 0x8000 pages away if the number
-	 * of CBs are <=8. So, assume the offset 0x8000 until mentioned
-	 * explicitely.
-	 */
 	cb_offset = drvdata->cb_base - drvdata->base;
 	ctx_drvdata->num = ((r->start - rp.start - cb_offset)
 					>> CTX_SHIFT);

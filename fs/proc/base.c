@@ -1006,6 +1006,10 @@ static ssize_t oom_adj_write(struct file *file, const char __user *buf,
 
 	task->signal->oom_score_adj = oom_adj;
 	trace_oom_score_adj_update(task);
+
+	if(!strncmp("main",task->comm,4) && task->parent->pid ==1)
+		 printk(KERN_WARNING"%s :%s(%d) write /proc/%d/oom_score_adj %d",__func__,
+			current->comm,task_pid_nr(current),task_pid_nr(task),task->signal->oom_score_adj);
 err_sighand:
 	unlock_task_sighand(task, &flags);
 err_task_lock:
@@ -1127,6 +1131,9 @@ static ssize_t oom_score_adj_write(struct file *file, const char __user *buf,
 		task->signal->oom_score_adj_min = (short)oom_score_adj;
 	trace_oom_score_adj_update(task);
 
+	if(!strncmp("main",task->comm,4) && task->parent->pid ==1)
+                 printk(KERN_WARNING"%s :%s(%d) write /proc/%d/oom_score_adj %d",__func__,
+                        current->comm,task_pid_nr(current),task_pid_nr(task),task->signal->oom_score_adj);
 err_sighand:
 	unlock_task_sighand(task, &flags);
 err_task_lock:

@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2014,2016 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -45,8 +45,7 @@ struct msm_isp_bufq *msm_isp_get_bufq(
 	uint32_t bufq_index = bufq_handle & 0xFF;
 
 	if ((bufq_handle == 0) ||
-		(bufq_index > buf_mgr->num_buf_q) ||
-		(bufq_index >= BUF_MGR_NUM_BUF_Q) )
+		(bufq_index > buf_mgr->num_buf_q))
 		return NULL;
 
 	bufq = &buf_mgr->bufq[bufq_index];
@@ -492,7 +491,7 @@ static int msm_isp_get_buf(struct msm_isp_buf_mgr *buf_mgr, uint32_t id,
 		(*buf_info)->state = MSM_ISP_BUFFER_STATE_DEQUEUED;
 		if (bufq->buf_type == ISP_SHARE_BUF) {
 			memset((*buf_info)->buf_used, 0,
-				   sizeof(uint8_t) * bufq->buf_client_count);
+				   sizeof((*buf_info)->buf_used)); /* HTC Klocwork */
 			(*buf_info)->buf_used[id] = 1;
 			(*buf_info)->buf_get_count = 1;
 			(*buf_info)->buf_put_count = 0;

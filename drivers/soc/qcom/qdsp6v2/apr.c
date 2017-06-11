@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2014, 2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2010-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -44,7 +44,6 @@ static struct apr_client client[APR_DEST_MAX][APR_CLIENT_MAX];
 static wait_queue_head_t dsp_wait;
 static wait_queue_head_t modem_wait;
 static bool is_modem_up = 0;
-/* Subsystem restart: QDSP6 data, functions */
 static struct workqueue_struct *apr_reset_workqueue;
 static void apr_reset_deregister(struct work_struct *work);
 struct apr_reset_work {
@@ -229,7 +228,7 @@ int apr_wait_for_device_up(int dest_id)
 				    (1 * HZ));
 	else
 		pr_err("%s: unknown dest_id %d\n", __func__, dest_id);
-	/* returns left time */
+	
 	return rc;
 }
 
@@ -337,7 +336,7 @@ struct apr_svc *apr_register(char *dest, char *svc_name, apr_fn svc_fn,
 	if (!strcmp(dest, "ADSP"))
 		domain_id = APR_DOMAIN_ADSP;
 	else if (!strcmp(dest, "MODEM")) {
-		/* Register voice services if destination permits */
+		
 		if (!apr_register_voice_svc())
 			goto done;
 		domain_id = APR_DOMAIN_MODEM;
@@ -457,7 +456,7 @@ void apr_cb_func(void *buf, int len, void *priv)
 	pr_debug("\n*****************\n");
 
 	if (!buf || len <= APR_HDR_SIZE) {
-		pr_err("APR: Improper apr pkt received:%pK %d\n", buf, len);
+		pr_err("APR: Improper apr pkt received:%p %d\n", buf, len);
 		return;
 	}
 	hdr = buf;
@@ -543,7 +542,7 @@ void apr_cb_func(void *buf, int len, void *priv)
 		return;
 	}
 	pr_debug("svc_idx = %d\n", i);
-	pr_debug("%x %x %x %pK %pK\n", c_svc->id, c_svc->dest_id,
+	pr_debug("%x %x %x %p %p\n", c_svc->id, c_svc->dest_id,
 		 c_svc->client_id, c_svc->fn, c_svc->priv);
 	data.payload_size = hdr->pkt_size - hdr_size;
 	data.opcode = hdr->opcode;
@@ -607,7 +606,7 @@ static void apr_reset_deregister(struct work_struct *work)
 			container_of(work, struct apr_reset_work, work);
 
 	handle = apr_reset->handle;
-	pr_debug("%s:handle[%pK]\n", __func__, handle);
+	pr_debug("%s:handle[%p]\n", __func__, handle);
 	apr_deregister(handle);
 	kfree(apr_reset);
 }
@@ -640,7 +639,7 @@ int apr_deregister(void *handle)
 		client[dest_id][client_id].svc_cnt--;
 		if (!client[dest_id][client_id].svc_cnt) {
 			svc->need_reset = 0x0;
-			pr_debug("%s: service is reset %pK\n", __func__, svc);
+			pr_debug("%s: service is reset %p\n", __func__, svc);
 		}
 	}
 
@@ -668,7 +667,7 @@ void apr_reset(void *handle)
 
 	if (!handle)
 		return;
-	pr_debug("%s: handle[%pK]\n", __func__, handle);
+	pr_debug("%s: handle[%p]\n", __func__, handle);
 
 	if (apr_reset_workqueue == NULL) {
 		pr_err("%s: apr_reset_workqueue is NULL\n", __func__);
@@ -688,7 +687,6 @@ void apr_reset(void *handle)
 	queue_work(apr_reset_workqueue, &apr_reset_worker->work);
 }
 
-/* Dispatch the Reset events to Modem and audio clients */
 void dispatch_event(unsigned long code, uint16_t proc)
 {
 	struct apr_client *apr_client;
@@ -700,7 +698,7 @@ void dispatch_event(unsigned long code, uint16_t proc)
 	data.opcode = RESET_EVENTS;
 	data.reset_event = code;
 
-	/* Service domain can be different from the processor */
+	
 	data.reset_proc = apr_get_reset_domain(proc);
 
 	clnt = APR_CLIENT_AUDIO;
@@ -801,9 +799,9 @@ static int lpass_notifier_cb(struct notifier_block *this, unsigned long code,
 		apr_set_q6_state(APR_SUBSYS_DOWN);
 		dispatch_event(code, APR_DEST_QDSP6);
 		if (data && data->crashed) {
-			/* Send NMI to QDSP6 via an SCM call. */
+			
 			scm_call_atomic1(SCM_SVC_UTIL, SCM_Q6_NMI_CMD, 0x1);
-			/* The write should go through before q6 is shutdown */
+			
 			mb();
 			pr_debug("L-Notify: Q6 NMI was sent.\n");
 		}
@@ -837,7 +835,7 @@ static int panic_handler(struct notifier_block *this,
 				unsigned long event, void *ptr)
 {
 	if (powered_on)
-		/* Send NMI to QDSP6 via an SCM call. */
+		
 		scm_call_atomic1(SCM_SVC_UTIL, SCM_Q6_NMI_CMD, 0x1);
 	return NOTIFY_DONE;
 }

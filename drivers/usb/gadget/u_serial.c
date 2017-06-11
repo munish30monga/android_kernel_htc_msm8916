@@ -60,7 +60,9 @@
  * is managed in userspace ... OBEX, PTP, and MTP have been mentioned.
  */
 
-#define PREFIX	"ttyGS"
+/*++ 2014/12/04, USB Team,  PCN00013#3 ++*/
+#define PREFIX	"ttyHSUSB"
+/*-- 2014/12/04, USB Team,  PCN00013#3 --*/
 
 /*
  * gserial is the lifecycle interface, used by USB functions
@@ -1258,9 +1260,6 @@ static ssize_t debug_read_status(struct file *file, char __user *ubuf,
 	int ret;
 	int result = 0;
 
-	if (!ui_dev)
-		return -EINVAL;
-
 	tty = ui_dev->port.tty;
 	gser = ui_dev->port_usb;
 
@@ -1313,9 +1312,6 @@ static ssize_t debug_write_reset(struct file *file, const char __user *buf,
 	struct gs_port *ui_dev = file->private_data;
 	unsigned long flags;
 
-	if (!ui_dev)
-		return -EINVAL;
-
 	spin_lock_irqsave(&ui_dev->port_lock, flags);
 	ui_dev->nbytes_from_host = ui_dev->nbytes_to_tty =
 			ui_dev->nbytes_from_tty = ui_dev->nbytes_to_host = 0;
@@ -1344,9 +1340,6 @@ struct dentry *gs_dent;
 static void usb_debugfs_init(struct gs_port *ui_dev, int port_num)
 {
 	char buf[48];
-
-	if (!ui_dev)
-		return;
 
 	snprintf(buf, 48, "usb_serial%d", port_num);
 	gs_dent = debugfs_create_dir(buf, 0);
@@ -1627,6 +1620,12 @@ static int userial_init(void)
 			B9600 | CS8 | CREAD | HUPCL | CLOCAL;
 	gs_tty_driver->init_termios.c_ispeed = 9600;
 	gs_tty_driver->init_termios.c_ospeed = 9600;
+
+        /*++ 2014/12/19, USB Team,  PCN00013#4 ++*/
+	gs_tty_driver->init_termios.c_lflag = 0;
+	gs_tty_driver->init_termios.c_iflag = 0;
+	gs_tty_driver->init_termios.c_oflag = 0;
+	/*-- 2014/12/19, USB Team,  PCN00013#4 --*/
 
 	tty_set_operations(gs_tty_driver, &gs_tty_ops);
 	for (i = 0; i < MAX_U_SERIAL_PORTS; i++)

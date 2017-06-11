@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2014, 2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -41,7 +41,9 @@
 
 #include "ipc_router_private.h"
 #include "ipc_router_security.h"
-
+//+HTC, workaround to avoid long wake lock hold when quicboot power off 
+#include <linux/wakelock.h>
+//-HTC, workaround to avoid long wake lock hold when quicboot power off 
 enum {
 	SMEM_LOG = 1U << 0,
 	RTR_DBG = 1U << 1,
@@ -918,7 +920,10 @@ static int post_pkt_to_port(struct msm_ipc_port *port_ptr,
 	}
 
 	mutex_lock(&port_ptr->port_rx_q_lock_lhc3);
-	__pm_stay_awake(&port_ptr->port_rx_ws);
+//+HTC, workaround to avoid long wake lock hold when quicboot power off 
+	// __pm_stay_awake(&port_ptr->port_rx_ws);
+	 __pm_wakeup_event(&port_ptr->port_rx_ws, jiffies_to_msecs(10*HZ));
+//-HTC, workaround to avoid long wake lock hold when quicboot power off 
 	list_add_tail(&temp_pkt->list, &port_ptr->port_rx_q);
 	wake_up(&port_ptr->port_rx_wait_q);
 	notify = port_ptr->notify;
@@ -3257,7 +3262,7 @@ int msm_ipc_router_get_curr_pkt_size(struct msm_ipc_port *port_ptr)
 
 int msm_ipc_router_bind_control_port(struct msm_ipc_port *port_ptr)
 {
-	if (unlikely(!port_ptr || port_ptr->type != CLIENT_PORT))
+	if (!port_ptr)
 		return -EINVAL;
 
 	down_write(&local_ports_lock_lhc2);
