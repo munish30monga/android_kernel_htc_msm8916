@@ -128,6 +128,7 @@ ifeq ($(CONFIG_MACH_A51_TUHL), y)
 endif
 
 ifeq ($(CONFIG_MACH_M8QL_UL), y)
+	dtb-$(CONFIG_ARCH_MSM8916)  += msm8939-m8qlul.dtb
 	dtb-$(CONFIG_ARCH_MSM8916)  += msm8939-m8qltuhl.dtb
 endif
 
