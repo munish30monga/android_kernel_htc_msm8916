@@ -60,6 +60,12 @@ struct mdss_hw_settings {
 	u32 val;
 };
 
+struct  mdss_max_bw_settings {
+	u32 mdss_max_bw_mode;
+	u32 mdss_max_bw_val;
+};
+
+
 struct mdss_debug_inf {
 	void *debug_data;
 	void (*debug_enable_clock)(int on);
@@ -80,9 +86,9 @@ struct mdss_perf_tune {
 #define MDSS_IRQ_REQ		0
 
 struct mdss_intr {
-	/* requested intr */
+	
 	u32 req;
-	/* currently enabled intr */
+	
 	u32 curr;
 	int state;
 	spinlock_t lock;
@@ -257,6 +263,11 @@ struct mdss_data_type {
 
 	u64 ab[MDSS_MAX_BUS_CLIENTS];
 	u64 ib[MDSS_MAX_BUS_CLIENTS];
+
+struct  mdss_max_bw_settings *max_bw_settings;
+	u32 bw_mode_bitmap;
+ 	u32 max_bw_settings_cnt;
+
 };
 extern struct mdss_data_type *mdss_res;
 
@@ -334,4 +345,4 @@ static inline int mdss_get_sd_client_cnt(void)
 #define MDSS_REG_READ(mdata, offset) \
 		dss_reg_r(&mdata->mdss_io, offset, 0)
 
-#endif /* MDSS_H */
+#endif 

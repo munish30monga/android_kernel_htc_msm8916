@@ -73,7 +73,7 @@ int sha1_update_arm(struct shash_desc *desc, const u8 *data,
 	unsigned int partial = sctx->count % SHA1_BLOCK_SIZE;
 	int res;
 
-	/* Handle the fast case right here */
+	
 	if (partial + len < SHA1_BLOCK_SIZE) {
 		sctx->count += len;
 		memcpy(sctx->buffer + partial, data, len);
@@ -85,7 +85,6 @@ int sha1_update_arm(struct shash_desc *desc, const u8 *data,
 EXPORT_SYMBOL_GPL(sha1_update_arm);
 
 
-/* Add padding and return the message digest. */
 static int sha1_final(struct shash_desc *desc, u8 *out)
 {
 	struct sha1_state *sctx = shash_desc_ctx(desc);
@@ -96,10 +95,10 @@ static int sha1_final(struct shash_desc *desc, u8 *out)
 
 	bits = cpu_to_be64(sctx->count << 3);
 
-	/* Pad out to 56 mod 64 and append length */
+	
 	index = sctx->count % SHA1_BLOCK_SIZE;
 	padlen = (index < 56) ? (56 - index) : ((SHA1_BLOCK_SIZE+56) - index);
-	/* We need to fill a whole block for __sha1_update() */
+	
 	if (padlen <= 56) {
 		sctx->count += padlen;
 		memcpy(sctx->buffer + index, padding, padlen);
@@ -108,11 +107,11 @@ static int sha1_final(struct shash_desc *desc, u8 *out)
 	}
 	__sha1_update(sctx, (const u8 *)&bits, sizeof(bits), 56);
 
-	/* Store state in digest */
+	
 	for (i = 0; i < 5; i++)
 		dst[i] = cpu_to_be32(sctx->state[i]);
 
-	/* Wipe context */
+	
 	memset(sctx, 0, sizeof(*sctx));
 	return 0;
 }
