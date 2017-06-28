@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2016, Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -21,14 +21,16 @@
 
 #define MAX_NUM_CONFIDENCE 20
 
+#define ADM_LSM_PORT_ID 0xADCB
+
 typedef void (*lsm_app_cb)(uint32_t opcode, uint32_t token,
 		       uint32_t *payload, void *priv);
 
 struct lsm_sound_model {
 	dma_addr_t      phys;
 	void		*data;
-	size_t		size; 
-	uint32_t	actual_size; 
+	size_t		size; /* size of buffer */
+	uint32_t	actual_size; /* actual number of bytes read by DSP */
 	struct ion_handle *handle;
 	struct ion_client *client;
 	uint32_t	mem_map_handle;
@@ -71,6 +73,7 @@ struct lsm_client {
 	uint16_t	connect_to_port;
 	uint8_t		num_confidence_levels;
 	uint8_t		*confidence_levels;
+	bool		opened;
 	bool		started;
 	dma_addr_t	lsm_cal_phy_addr;
 	uint32_t	lsm_cal_size;
@@ -80,6 +83,9 @@ struct lsm_client {
 	struct lsm_lab_buffer *lab_buffer;
 	struct lsm_lab_hw_params hw_params;
 	bool		use_topology;
+	int		session_state;
+	bool		poll_enable;
+	int		perf_mode;
 };
 
 struct lsm_stream_cmd_open_tx {
@@ -128,12 +134,23 @@ struct lsm_param_op_mode {
 struct lsm_param_connect_to_port {
 	struct lsm_param_payload_common common;
 	uint32_t	minor_version;
-	
+	/* AFE port id that receives voice wake up data */
 	uint16_t	port_id;
 	uint16_t	reserved;
 } __packed;
 
+struct lsm_param_poll_enable {
+	struct lsm_param_payload_common common;
+	uint32_t	minor_version;
+	/* indicates to voice wakeup that HW MAD/SW polling is enabled or not */
+	uint32_t	polling_enable;
+} __packed;
 
+/*
+ * This param cannot be sent in this format.
+ * The actual number of confidence level values
+ * need to appended to this param payload.
+ */
 struct lsm_param_min_confidence_levels {
 	struct lsm_param_payload_common common;
 	uint8_t		num_confidence_levels;
@@ -167,6 +184,12 @@ struct lsm_cmd_set_connectport {
 	struct apr_hdr  msg_hdr;
 	struct lsm_set_params_hdr params_hdr;
 	struct lsm_param_connect_to_port connect_to_port;
+} __packed;
+
+struct lsm_cmd_poll_enable {
+	struct apr_hdr  msg_hdr;
+	struct lsm_set_params_hdr params_hdr;
+	struct lsm_param_poll_enable poll_enable;
 } __packed;
 
 struct lsm_param_epd_thres {
@@ -278,4 +301,5 @@ void q6lsm_sm_set_param_data(struct lsm_client *client,
 		struct lsm_params_info *p_info,
 		size_t *offset);
 int q6lsm_set_port_connected(struct lsm_client *client);
-#endif 
+int q6lsm_polling_enable(struct lsm_client *client, bool poll_enable);
+#endif /* __Q6LSM_H__ */

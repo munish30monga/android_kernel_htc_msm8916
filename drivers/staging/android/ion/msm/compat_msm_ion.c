@@ -31,11 +31,6 @@ struct compat_ion_prefetch_data {
 	compat_ulong_t len;
 };
 
-struct compat_ion_client_name_data {
-        compat_size_t len;
-        compat_uptr_t name;
-};
-
 #define COMPAT_ION_IOC_CLEAN_CACHES    _IOWR(ION_IOC_MSM_MAGIC, 0, \
 						struct compat_ion_flush_data)
 #define COMPAT_ION_IOC_INV_CACHES      _IOWR(ION_IOC_MSM_MAGIC, 1, \
@@ -46,8 +41,6 @@ struct compat_ion_client_name_data {
 						struct compat_ion_prefetch_data)
 #define COMPAT_ION_IOC_DRAIN                   _IOWR(ION_IOC_MSM_MAGIC, 4, \
 						struct compat_ion_prefetch_data)
-#define COMPAT_ION_IOC_CLIENT_DEBUG_NAME       _IOWR(ION_IOC_MSM_MAGIC, 5, \
-                                                struct compat_ion_client_name_data)
 
 static int compat_get_ion_flush_data(
 			struct compat_ion_flush_data __user *data32,
@@ -64,8 +57,8 @@ static int compat_get_ion_flush_data(
 	err |= get_user(i, &data32->fd);
 	err |= put_user(i, &data->fd);
 	err |= get_user(u, &data32->vaddr);
-	
-	data->vaddr = NULL;
+	/* upper bits won't get set, zero them */
+	err |= put_user(NULL, &data->vaddr);
 	err |= put_user(u, (compat_uptr_t *)&data->vaddr);
 	err |= get_user(l, &data32->offset);
 	err |= put_user(l, &data->offset);
@@ -91,22 +84,7 @@ static int compat_get_ion_prefetch_data(
 	return err;
 }
 
-static int compat_get_ion_client_name_data(
-			struct compat_ion_client_name_data __user *data32,
-			struct ion_client_name_data __user *data)
-{
-	compat_size_t s;
-	compat_uptr_t ptr;
-	int err;
 
-	err = get_user(s, &data32->len);
-	err |= put_user(s, &data->len);
-	err |= get_user(ptr, &data32->name);
-	data->name = NULL;
-	err |= put_user(ptr, (compat_uptr_t *)&data->name);
-
-	return err;
-}
 
 static unsigned int convert_cmd(unsigned int cmd)
 {
@@ -121,8 +99,6 @@ static unsigned int convert_cmd(unsigned int cmd)
 		return ION_IOC_PREFETCH;
 	case COMPAT_ION_IOC_DRAIN:
 		return ION_IOC_DRAIN;
-	case COMPAT_ION_IOC_CLIENT_DEBUG_NAME:
-		return ION_IOC_CLIENT_DEBUG_NAME;
 	default:
 		return cmd;
 	}
@@ -172,22 +148,6 @@ long compat_msm_ion_ioctl(struct ion_client *client, unsigned int cmd,
 						(unsigned long)data);
 
 	}
-	case COMPAT_ION_IOC_CLIENT_DEBUG_NAME:
-        {
-		struct compat_ion_client_name_data __user *data32;
-		struct ion_client_name_data __user *data;
-		int err;
-
-		data32 = compat_ptr(arg);
-		data = compat_alloc_user_space(sizeof(*data));
-		if (data == NULL)
-			return -EFAULT;
-		err = compat_get_ion_client_name_data(data32, data);
-		if (err)
-			return err;
-		return msm_ion_custom_ioctl(client, convert_cmd(cmd),
-						(unsigned long)data);
-        }
 	default:
 		if (is_compat_task())
 			return -ENOIOCTLCMD;
